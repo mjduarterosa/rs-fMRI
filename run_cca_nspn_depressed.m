@@ -18,7 +18,8 @@ vars(vars==999) = med(vars==999);
 N = size(vars,1);
 
 % load netmats
-load('/Users/maria/Documents/NSPN/analysis/cca_analysis/netmats_NET_corr.mat');
+% load('/Users/maria/Documents/NSPN/analysis/cca_analysis/netmats_NET_corr.mat');
+load('/Users/maria/Documents/NSPN/analysis/netmats_EVC.mat');
 
 % load depressed
 ids_d = csvread('/Users/maria/Documents/NSPN/docs/NSPN_IDs_depressed.csv'); 

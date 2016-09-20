@@ -24,11 +24,11 @@ def load_all_data( data_path):
     return data
 
 # Load data
-data_path = '/Users/maria/Documents/NSPN/code/nets_all.csv'
+data_path = '/Users/maria/Documents/NSPN/rs-fMRI/EVCs_all.csv'
 X = load_all_data( data_path)
 
 # Classifier
-clf = svm.OneClassSVM(nu=0.15, kernel="rbf", gamma=1./X.shape[1])
+clf = svm.OneClassSVM(nu=0.1, kernel="rbf", gamma=1./X.shape[1])
 
 # Predictions
 preds = []
