@@ -27,13 +27,31 @@ for i = 1:length(varslabelsbaseline)
 end
 data = [s(1:ncomp),s(end-ncomp+1:end)];
 datalab = [si(1:ncomp),si(end-ncomp+1:end)];
-labelsw = cell(1,length(datalab));
-for i = 1:length(datalab)
-    labelsw{i} = char(varslabelsbaseline{datalab(i)});
-end
-grp = colorlabels(datalab);
+grp = 
 for i = 1:length(scales), grp_labels{i,1} = scales{i}; grp_labels{i,2} = i; end
-plot_w_joao(data, labelsw, grp, grp_labels)
+
+ax = axis; % Current axis limits
+axis(axis); % Set the axis limit modes (e.g. XLimMode) to manual
+Yl = ax(3:4); % Y-axis limits
+
+for i = 1:ncomp*2
+    bar(i,data(i),'FaceColor',colorlabels(datalab(i),:));
+    set(gca,'xticklabel',{[]},'XGrid','on')
+    hold on
+    ax = axis; % Current axis limits
+    Yl = ax(3:4);
+    if i <= ncomp
+        t = text(i,Yl(1),char(varslabelsbaseline{si(i)}),'FontSize',14);
+        set(t,'HorizontalAlignment','right','VerticalAlignment','top','Rotation',45, 'Fontsize', 13);
+    else
+        ix = i-ncomp;
+        t = text(i,Yl(1),char(varslabelsbaseline{si(end-ncomp+ix)}),'FontSize',14);
+        set(t,'HorizontalAlignment','right','VerticalAlignment','top','Rotation',45, 'Fontsize', 13);
+    end
+end
+    xlim([0 41])
+
+h = createfigure_barplotcca([1:ncomp*2], [s(1:ncomp),s(end-ncomp+1:end)]);
 
 % Plot projections CCA1 with color corresponding to variable
 gender = csvread('/Users/maria/Documents/NSPN/docs/NSPN_gender_bin_baseline.csv');      % gender
@@ -45,6 +63,10 @@ aged = aged(:,2:end);
 age = [age; aged];
 % c(:)=vars(:,si(end-1));
 
+% When in the model
+% c(:) = age;
+% figure;scatter(grotU(:,1),grotV(:,1),80,c(:),'o');
+
 c(:) = age;
 ids = gender;
 % dep = [zeros(299,1); ones(33,1)];
@@ -54,8 +76,6 @@ hold on;
 scatter(grotU(ids==0,1),grotV(ids==0,1),100,c(ids==0),'o');
 hold off;
 colorbar
-
-figure;scatter(age,grotU(:,1),'filled','o');
 
 % When projected
 % c(:)=[ones(299,1);zeros(33,1)]; % controls and depressed

@@ -21,11 +21,6 @@ PAPset = palm_quickperms([ ], EB, Nperm);                                       
 %%% load netmats
 load('/Users/maria/Documents/NSPN/analysis/cca_analysis/netmats_NET_corr.mat');
 
-% load depressed
-% ids_d = csvread('/Users/maria/Documents/NSPN/docs/NSPN_IDs_depressed.csv'); 
-% ids_d = ids_d(:,2);
-% NETdep = NET(ids_d,:);
-
 % load controls
 ids = csvread('/Users/maria/Documents/NSPN/docs/NSPN_MRIids_baseline_new.csv'); 
 ids = ids(:,1);
@@ -57,7 +52,8 @@ gender = gender(:,2:end);
 conf = palm_inormal(varsQconf);    % Gaussianise
 conf(isnan(conf))=0;  % impute missing data as zeros
 conf = nets_normalise(conf);  % add on squared terms and renormalise
-conf = [conf mri_centre gender];
+% conf = [conf mri_centre gender];
+conf = [conf mri_centre];
 
 %%% number of components to feed into CCA
 Nkeep = 100;

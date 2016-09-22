@@ -12,14 +12,14 @@ varsd = csvread('/Users/maria/Documents/NSPN/docs/NSPN_vars_depressed.csv');
 
 % concatenate variables (healthy + depressed)
 vars = [vars(:,2:end); varsd(:,2:end)];
-vars(:,sum(vars~=999)<300) = [];   % pre-delete vars with LOADS of missing data (healthy + depressed)
+vars(:,sum(vars~=999)<298) = [];   % pre-delete vars with LOADS of missing data (healthy + depressed)
 med = repmat(median(vars),size(vars,1),1);   % missing data imputation using the median (healthy)
 vars(vars==999) = med(vars==999);
 N = size(vars,1);
 
 % load netmats
-% load('/Users/maria/Documents/NSPN/analysis/cca_analysis/netmats_NET_corr.mat');
-load('/Users/maria/Documents/NSPN/analysis/netmats_EVC.mat');
+load('/Users/maria/Documents/NSPN/analysis/cca_analysis/netmats_NET_corr.mat');
+% load('/Users/maria/Documents/NSPN/analysis/netmats_EVC.mat');
 
 % load depressed
 ids_d = csvread('/Users/maria/Documents/NSPN/docs/NSPN_IDs_depressed.csv'); 
@@ -34,13 +34,13 @@ NET = NET(ids,:);
 % concatenate nets
 NET = [NET; NETd];
 
-keyboard
 %%% Load confounds
 % -------------------------------------------------------------------------
 varsQconf = csvread('/Users/maria/Documents/NSPN/docs/NSPN_weight_height_baseline.csv');     % weight and height
 varsQconf = varsQconf(:,2:end);
 varsQconfd = csvread('/Users/maria/Documents/NSPN/docs/NSPN_weight_height_depressed.csv');     % weight and height
 varsQconfd = varsQconfd(:,2:end);
+
 age = csvread('/Users/maria/Documents/NSPN/docs/NSPN_age_baseline_cambridge.csv');     % age
 age = age(:,2:end);
 aged = csvread('/Users/maria/Documents/NSPN/docs/NSPN_age_depressed.csv');     % age
@@ -48,8 +48,10 @@ aged = aged(:,2:end);
 load('/Users/maria/Documents/NSPN/code/mean_frame_displacement.mat');      % Frame displacement
 fd = mean(frame_disp_sub(ids,:),2); 
 fdd = mean(frame_disp_sub(ids_d,:),2); 
-varsQconf = [varsQconf, age, fd];
-varsQconfd = [varsQconfd, aged, fdd];
+% varsQconf = [varsQconf, age, fd];
+% varsQconfd = [varsQconfd, aged, fdd];
+varsQconf = [varsQconf, fd];
+varsQconfd = [varsQconfd, fdd];
 mri_centre = csvread('/Users/maria/Documents/NSPN/docs/NSPN_MRIcentre_baseline.csv');      % MRI centre
 mri_centre = mri_centre(:,2:end);
 mri_centred = csvread('/Users/maria/Documents/NSPN/docs/NSPN_MRIcentre_depressed.csv');      % MRI centre
@@ -69,7 +71,8 @@ gender = [gender; genderd];
 conf = palm_inormal(varsQconf);    % Gaussianise
 conf(isnan(conf))=0;  % impute missing data as zeros
 conf = nets_normalise(conf);  % add on squared terms and renormalise
-conf = [conf mri_centre gender];
+% conf = [conf mri_centre gender];
+conf = [conf mri_centre];
 
 %%% prepare permutation scheme using PALM - for more details see:
 % -------------------------------------------------------------------------
@@ -85,6 +88,7 @@ Nkeep = 100;
 NET1 = nets_demean(NET);  NET1=NET1/std(NET1(:)); % no norm
 grot = NET1;
 NETd = nets_demean(grot-conf*(pinv(conf)*grot));   % deconfound and demean
+
 [uu1,ss1,vv1]=nets_svds(NETd,Nkeep); % SVD reduction
 
 %%% identify "bad" SMs - e.g. because of bad outliers or not enough distinct values
@@ -118,7 +122,6 @@ end
 varsdCOV2=nearestSPD(varsdCOV); % minor adjustment: project onto the nearest valid covariance matrix
 [uu,dd]=eigs(varsdCOV2,Nkeep);  % SVD (eigs actually)
 uu2=uu-conf*(pinv(conf)*uu);    % deconfound again just to be safe
-
 
 %%% CCA
 [grotA,grotB,grotR,grotU,grotV,grotstats]=canoncorr(uu1,uu2);
