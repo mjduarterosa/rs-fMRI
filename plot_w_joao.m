@@ -15,7 +15,7 @@ function plot_w_joao(w, labels, grp, grp_labels)
 % Written by Joao Matos Monteiro
 % Email: joao.monteiro@ucl.ac.uk
 
-
+figure;
 %--- Set colors of the groups
 colormap('jet');
 label_colors = colormap;

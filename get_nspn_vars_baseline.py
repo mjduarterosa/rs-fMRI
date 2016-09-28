@@ -93,7 +93,7 @@ for row in csv_f:
     data_iua_ids.append(row[0])
 
 # Get weight and height
-f = open('/Users/maria/Documents/NSPN/docs/NSPN_weight_height_processed.csv', 'rU')
+f = open('/Users/maria/Documents/NSPN/docs/NSPN_weight_height_waist_processed.csv', 'rU')
 csv_f = csv.reader(f)
 header = next(csv_f)
 data_wh = []
@@ -124,69 +124,69 @@ for row in csv_f:
     age_cambridge.append(row[4])
 
 # Save variables data - Cambridhe cohort
-ids_good = []
-mri_good = []
-gender_good = []
-cohort_good = []
-age_good = []
-with open("/Users/maria/Documents/NSPN/docs/NSPN_vars_baseline_test.csv", "wb") as nf:
-    writer = csv.writer(nf)
-    for i in range(0,np.shape(ids_mri)[0]):
-        if (baseline_vars.count(ids_mri[i])) > 0:
-            indx = baseline_vars.index(ids_mri[i])
-            writer.writerow(data_baseline[indx])
-            ids_good.append(i+1)
-            mri_good.append(ids_centre[i])
-            gender_good.append(ids_gender[i])
-            cohort_good.append(ids_cohort[i])
-            age_good.append(ids_age[i])
+# ids_good = []
+# mri_good = []
+# gender_good = []
+# cohort_good = []
+# age_good = []
+# with open("/Users/maria/Documents/NSPN/docs/NSPN_vars_baseline_test.csv", "wb") as nf:
+#     writer = csv.writer(nf)
+#     for i in range(0,np.shape(ids_mri)[0]):
+#         if (baseline_vars.count(ids_mri[i])) > 0:
+#             indx = baseline_vars.index(ids_mri[i])
+#             writer.writerow(data_baseline[indx])
+#             ids_good.append(i+1)
+#             mri_good.append(ids_centre[i])
+#             gender_good.append(ids_gender[i])
+#             cohort_good.append(ids_cohort[i])
+#             age_good.append(ids_age[i])
 
 # Save age Cambridge
-with open("/Users/maria/Documents/NSPN/docs/NSPN_age_baseline_cambridge.csv", "wb") as nf:
-    writer = csv.writer(nf)
-    for i in range(0,np.shape(ids_mri)[0]):
-        if (baseline_vars.count(ids_mri[i])) > 0:
-            indx = baseline_vars.index(ids_mri[i])
-            writer.writerow([i,age_cambridge[indx]])
+# with open("/Users/maria/Documents/NSPN/docs/NSPN_age_baseline_cambridge.csv", "wb") as nf:
+#     writer = csv.writer(nf)
+#     for i in range(0,np.shape(ids_mri)[0]):
+#         if (baseline_vars.count(ids_mri[i])) > 0:
+#             indx = baseline_vars.index(ids_mri[i])
+#             writer.writerow([i,age_cambridge[indx]])
 
 
 # Save weight and height data - Cambridhe cohort
-with open("/Users/maria/Documents/NSPN/docs/NSPN_weight_height_baseline.csv", "wb") as nf:
+with open("/Users/maria/Documents/NSPN/docs/NSPN_weight_height_waist_baseline.csv", "wb") as nf:
     writer = csv.writer(nf)
     for i in range(0,np.shape(ids_mri)[0]):
         if (baseline_wh.count(ids_mri[i])) > 0:
             indx = baseline_wh.index(ids_mri[i])
             writer.writerow(data_wh_baseline[indx])
 
-# Save IDs - Cambridhe cohort
-with open("/Users/maria/Documents/NSPN/docs/NSPN_MRIids_baseline.csv", "wb") as nf:
-    writer = csv.writer(nf)
-    for i in range(0,np.shape(ids_good)[0]):
-        writer.writerow([ids_good[i],ids_good[i]])
-
-# Save centre information - Cambridhe cohort
-with open("/Users/maria/Documents/NSPN/docs/NSPN_gender_bin_baseline.csv", "wb") as nf:
-    writer = csv.writer(nf)
-    for i in range(0,np.shape(ids_good)[0]):
-        if gender_good[i] == 'Female':
-            writer.writerow([i,0])
-        else:
-            writer.writerow([i,1])
-
-# Save gender information - Cambridhe cohort
-with open("/Users/maria/Documents/NSPN/docs/NSPN_cohort_baseline.csv", "wb") as nf:
-    writer = csv.writer(nf)
-    for i in range(0,np.shape(ids_good)[0]):
-        writer.writerow([i,cohort_good[i]])
-
-# Save gender information - Cambridhe cohort
-with open("/Users/maria/Documents/NSPN/docs/NSPN_age_baseline.csv", "wb") as nf:
-    writer = csv.writer(nf)
-    for i in range(0,np.shape(ids_good)[0]):
-        writer.writerow([i,age_good[i]])
-
-# Save depressed IDs
-with open("/Users/maria/Documents/NSPN/docs/NSPN_IDs_depressed.csv", "wb") as nf:
-    writer = csv.writer(nf)
-    for i in range(0,len(depressed_id)):
-        writer.writerow([i,depressed_id[i]])
+# # Save IDs - Cambridhe cohort
+# with open("/Users/maria/Documents/NSPN/docs/NSPN_MRIids_baseline.csv", "wb") as nf:
+#     writer = csv.writer(nf)
+#     for i in range(0,np.shape(ids_good)[0]):
+#         writer.writerow([ids_good[i],ids_good[i]])
+#
+# # Save centre information - Cambridhe cohort
+# with open("/Users/maria/Documents/NSPN/docs/NSPN_gender_bin_baseline.csv", "wb") as nf:
+#     writer = csv.writer(nf)
+#     for i in range(0,np.shape(ids_good)[0]):
+#         if gender_good[i] == 'Female':
+#             writer.writerow([i,0])
+#         else:
+#             writer.writerow([i,1])
+#
+# # Save gender information - Cambridhe cohort
+# with open("/Users/maria/Documents/NSPN/docs/NSPN_cohort_baseline.csv", "wb") as nf:
+#     writer = csv.writer(nf)
+#     for i in range(0,np.shape(ids_good)[0]):
+#         writer.writerow([i,cohort_good[i]])
+#
+# # Save gender information - Cambridhe cohort
+# with open("/Users/maria/Documents/NSPN/docs/NSPN_age_baseline.csv", "wb") as nf:
+#     writer = csv.writer(nf)
+#     for i in range(0,np.shape(ids_good)[0]):
+#         writer.writerow([i,age_good[i]])
+#
+# # Save depressed IDs
+# with open("/Users/maria/Documents/NSPN/docs/NSPN_IDs_depressed.csv", "wb") as nf:
+#     writer = csv.writer(nf)
+#     for i in range(0,len(depressed_id)):
+#         writer.writerow([i,depressed_id[i]])

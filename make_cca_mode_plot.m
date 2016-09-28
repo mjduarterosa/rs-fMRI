@@ -1,21 +1,24 @@
-clear all
-close all
-clc
+% -------------------------------------------------------------------------
+% Plot CCA results - NSPN data (all data - healthy and depressed)
+%
+% Based on Smith et al. Nature Neuroscience 2016
+% Additional matlab toolboxes required (will need to addpath for each of these)
+% FSLNets     http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLNets
+% PALM        http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/PALM
+% nearestSPD  http://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
+% -------------------------------------------------------------------------
 
+% Load variable labels
+% -------------------------------------------------------------------------
 load '/Users/maria/Documents/NSPN/docs/vars_label.mat'
-load /Users/maria/Documents/NSPN/analysis/cca_analysis/results_100pca_age_gender_healthy.mat
-% load /Users/maria/Documents/NSPN/analysis/cca_analysis/results_100pca_age_gender_healthy_depressed.mat
 
-% Plot most important variables
+% Plot most important variables (n = 20)
+% -------------------------------------------------------------------------
 ncomp = 20;
 [s,si] = sort(grotBB);
-% figure;plot(ones(size(s(end-ncomp-1:end),1),1),s(end-ncomp-1:end),'r+');
-% hold on;
-% plot(ones(size(s(1:ncomp),1),1),s(1:ncomp),'b+');
-% for i = 1:ncomp, text(1.1,s(i+end-ncomp),char(varslabelsbaseline{si(i+end-ncomp)}),'FontSize',14); end
-% for i = 1:ncomp, text(1.1,s(i),char(varslabelsbaseline{si(i)}),'FontSize',14); end
+[sa,sia] = sort(abs(grotBB));
 
-% New bar plot
+% Make bar plot
 scales = {'apsd','bis','cads','dasi','icu','k10','spq','wemwbs','ypq','ctq','wasi'};
 clb = hsv(length(scales));
 for i = 1:length(varslabelsbaseline)
@@ -26,37 +29,38 @@ for i = 1:length(varslabelsbaseline)
     end
 end
 data = [s(1:ncomp),s(end-ncomp+1:end)];
+data_low = [sa(1:2*ncomp)];
+datalab_low = [sia(1:2*ncomp)];
 datalab = [si(1:ncomp),si(end-ncomp+1:end)];
 labelsw = cell(1,length(datalab));
+labelsw_low = cell(1,length(datalab_low));
 for i = 1:length(datalab)
     labelsw{i} = char(varslabelsbaseline{datalab(i)});
+    labelsw_low{i} = char(varslabelsbaseline{datalab_low(i)});
 end
 grp = colorlabels(datalab);
+grp_low = colorlabels(datalab_low);
 for i = 1:length(scales), grp_labels{i,1} = scales{i}; grp_labels{i,2} = i; end
-plot_w_joao(data, labelsw, grp, grp_labels)
+plot_w_joao(data, labelsw, grp, grp_labels);
+plot_w_joao(data_low, labelsw_low, grp_low, grp_labels);
 
 % Plot projections CCA1 with color corresponding to variable
-gender = csvread('/Users/maria/Documents/NSPN/docs/NSPN_gender_bin_baseline.csv');      % gender
-gender = gender(:,2:end);
-age = csvread('/Users/maria/Documents/NSPN/docs/NSPN_age_baseline_cambridge.csv');     % age
-age = age(:,2:end);
-aged = csvread('/Users/maria/Documents/NSPN/docs/NSPN_age_depressed.csv');     % age
-aged = aged(:,2:end);
-age = [age; aged];
-% c(:)=vars(:,si(end-1));
-
+% -------------------------------------------------------------------------
 c(:) = age;
-ids = gender;
-% dep = [zeros(299,1); ones(33,1)];
-% ids = dep;
-figure;scatter(grotU(ids==1,1),grotV(ids==1,1),100,c(ids==1),'filled','d');
-hold on;
-scatter(grotU(ids==0,1),grotV(ids==0,1),100,c(ids==0),'o');
-hold off;
+c(c<16)=1;
+c((c>=16 & c<18))=2;
+c((c>=18 & c<20))=3;
+c((c>=20 & c<22))=4;
+c((c>=22 & c<26))=5;
+figure;scatter(grotU(:,1),grotV(:,1),100,c(:),'filled','o');
+colorbar;
+c(:)=gender;
+figure;scatter(grotU(:,1),grotV(:,1),100,c(:),'filled','o');
 colorbar
-
-figure;scatter(age,grotU(:,1),'filled','o');
-
-% When projected
-% c(:)=[ones(299,1);zeros(33,1)]; % controls and depressed
-% figure;scatter([grotU(:,1);Udep(:,1)],[grotV(:,1);Vdep(:,1)],40,c(:),'filled');
+if length(c)>300,
+    c(1:299)=1;
+    c(300:332)=0;
+figure;scatter(grotU(:,1),grotV(:,1),100,c(:),'filled','o');
+end
+colorbar
+    
