@@ -52,25 +52,48 @@ end
 % -------------------------------------------------------------------------
 
 % Treat variables (missing data)
-nn = 269;
-vars(:,sum((vars~=999 | ~isnan(vars)))<nn) = [];  % pre-delete vars with LOADS of missing data
+if strcmp(cohort,'healthy')
+    nn = 269;
+else
+    % nn = 298;
+    nn = 312;
+end
+vars(vars==999) = NaN;
+vars(:,sum(~isnan(vars))<nn) = [];  % pre-delete vars with LOADS of missing data
+% vars(:,sum((vars~=999 | ~isnan(vars)))<nn) = [];  % pre-delete vars with LOADS of missing data
 vars = vars(:,2:end);
-med = repmat(median(vars),size(vars,1),1); % missing data imputation using the median
-vars(vars==999) = med(vars==999);
+med = repmat(median(vars,'omitnan'),size(vars,1),1); % missing data imputation using the median
+% vars(vars==999) = med(vars==999);
+vars(isnan(vars)) = med(isnan(vars));
 
 % Remove WASI (intellegence scores)
-% vars = vars(:,1:end-9);
-N = size(vars,1);
+vars = vars(:,1:end-9);
 
 % Process connectivity data (PCA - 100)
 % -------------------------------------------------------------------------
+% Nkeep = 100;
 Nkeep = 50;
+% Nkeep = 331;
 
 % prepare main netmat matrix
 NET1 = nets_demean(NET);  NET1=NET1/std(NET1(:));   % no norm
 grot = NET1;
 NETd = nets_demean(grot-conf*(pinv(conf)*grot));    % deconfound and demean
+% NETd = nets_normalise(grot-conf*(pinv(conf)*grot));    % deconfound and demean
 [uu1,ss1,vv1]=nets_svds(NETd,Nkeep);                % SVD reduction
+
+
+% Drop 33 random subject + 33 depressed
+% -------------------------------------------------------------------------
+% idx_c = randsample(299,33)';
+% idx_d = 300:332;
+% idx = [idx_c, idx_d];
+idx = [];                   % Select all!!!
+if ~isempty(idx)
+    uu1_proj = uu1(idx,:);
+    uu1(idx,:)=[];
+end
+N = size(uu1,1);
 
 % Prepare permutations
 % -------------------------------------------------------------------------
@@ -79,8 +102,6 @@ NETd = nets_demean(grot-conf*(pinv(conf)*grot));    % deconfound and demean
 Nperm = 10000;                                                                       
 EB = ones(N,1);
 PAPset = palm_quickperms([ ], EB, Nperm);
-% load PAPset
-% save PAPset PAPset
 
 % Prepare cognitive/clinical variables
 % -------------------------------------------------------------------------
@@ -118,6 +139,14 @@ varsdCOV2=nearestSPD(varsdCOV); % minor adjustment: project onto the nearest val
 [uu,dd]=eigs(varsdCOV2,Nkeep);  % SVD (eigs actually)
 uu2=uu-conf*(pinv(conf)*uu);    % deconfound again just to be safe
 
+% Drop 33 random subject + 33 depressed
+% -------------------------------------------------------------------------
+if ~isempty(idx)
+    uu2_proj = uu2(idx,:);
+    uu2(idx,:)=[];
+end
+
+
 % Calculate and Print Variance Explained PCA
 % -------------------------------------------------------------------------
 % [coeff, score, latent, tsquared, explained_varsd] = pca(varsd,'Algorithm','eig');
@@ -148,18 +177,29 @@ disp(sprintf('Number of FWE-significant CCA components: %d / Canonical Correlati
 % Get CCA modes
 % -------------------------------------------------------------------------
 % netmat weights for CCA mode 1
+NET(idx,:)=[];
+NETd(idx,:)=[];
 grotAA = corr(grotU(:,1),NET)';
 % or
 grotAAd = corr(grotU(:,1),NETd(:,1:size(NET,2)))'; % weights after deconfounding
 
 % variable weights for CCA mode 1
+vars(idx,:)=[];
 grotBB = corr(grotV(:,1),palm_inormal(vars),'rows','pairwise');
 % or 
 varsgrot=palm_inormal(vars);
 for i=1:size(varsgrot,2)
   grot=(isnan(varsgrot(:,i))==0); grotconf=nets_demean(conf(grot,:)); varsgrot(grot,i)=nets_normalise(varsgrot(grot,i)-grotconf*(pinv(grotconf)*varsgrot(grot,i)));
 end
+
 grotBBd = corr(grotV(:,1),varsgrot,'rows','pairwise')'; % weights after deconfounding
+
+% Projections
+% -------------------------------------------------------------------------
+if ~isempty(idx)
+    Uproj = (uu1_proj - repmat(mean(uu1_proj),size(uu1_proj,1),1))*grotA;
+    Vproj = (uu2_proj - repmat(mean(uu2_proj),size(uu2_proj,1),1))*grotB;
+end
 
 % Plot results
 % -------------------------------------------------------------------------

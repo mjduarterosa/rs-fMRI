@@ -37,6 +37,12 @@ mri_centre = mri_centre(:,2:end);
 gender = csvread('/Users/maria/Documents/NSPN/docs/NSPN_gender_bin_baseline.csv');      
 gender = gender(:,2:end);
 
+% Psychiatric scores
+psy_scores = csvread('/Users/maria/Documents/NSPN/docs/NSPN_psy_baseline.csv');   
+% psy_scores(250,:) = NaN;
+med = repmat(median(psy_scores),size(psy_scores,1),1); % missing data imputation using the median
+psy_scores(isnan(psy_scores)) = med(isnan(psy_scores));
+
 % Load depressed 
 % -------------------------------------------------------------------------
 % varsdep = csvread('/Users/maria/Documents/NSPN/docs/NSPN_vars_depressed.csv');
@@ -70,6 +76,9 @@ mri_centred_dep = mri_centred_dep(:,2:end);
 genderdep = csvread('/Users/maria/Documents/NSPN/docs/NSPN_gender_bin_depressed.csv');      % gender
 genderdep = genderdep(:,2:end);
 
+% Psychiatric scores
+psy_scores_dep = csvread('/Users/maria/Documents/NSPN/docs/NSPN_psy_depressed.csv');   
+
 % Concatenate data (comment for healthy only)
 % -------------------------------------------------------------------------
 
@@ -90,6 +99,8 @@ switch cohort
         fd = [fd; fddep];
         age = [age; agedep];
         gender = [gender; genderdep];
+        
+        psy_scores = [psy_scores; psy_scores_dep];
 end
 
 confraw = [varsQconf, fd, mri_centre, age, gender];

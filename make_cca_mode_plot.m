@@ -46,21 +46,75 @@ plot_w_joao(data_low, labelsw_low, grp_low, grp_labels);
 
 % Plot projections CCA1 with color corresponding to variable
 % -------------------------------------------------------------------------
+clear c
 c(:) = age;
+if exist('idx','var'), if ~isempty(idx), c(idx)=[]; end; end
 c(c<16)=1;
 c((c>=16 & c<18))=2;
 c((c>=18 & c<20))=3;
 c((c>=20 & c<22))=4;
 c((c>=22 & c<26))=5;
-figure;scatter(grotU(:,1),grotV(:,1),100,c(:),'filled','o');
+figure;scatter(grotU(:,1),grotV(:,1),100,c(:)','filled','o');
+xlabel('Brain Score')
+ylabel('Psy-Cog score')
 colorbar;
+clear c
 c(:)=gender;
+if exist('idx','var'), if ~isempty(idx),c(idx)=[]; end; end
 figure;scatter(grotU(:,1),grotV(:,1),100,c(:),'filled','o');
+xlabel('Brain Score')
+ylabel('Psy-Cog score')
 colorbar
 if length(c)>300,
     c(1:299)=1;
     c(300:332)=0;
 figure;scatter(grotU(:,1),grotV(:,1),100,c(:),'filled','o');
+xlabel('Brain Score')
+ylabel('Psy-Cog score')
 end
 colorbar
+
+% Plot psychiatric scores
+% -------------------------------------------------------------------------
+psy_labels = {'dispAntisocGen.bsl', 'dispImpulsSpec.bsl', 'sl5_general.bsl', 'sl5_sf2.bsl'};
+if exist('idx','var'), if ~isempty(idx),psy_scores(idx,:)=[]; end; end
+for i = 1:size(psy_scores,2)
+    [c,pv1]=corr(grotU(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)));
+    psy_brain(i,:)=[c,pv1];
+    if pv1 < 0.05
+        figure;plot(grotU(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)),'ro');
+        xlabel('Brain score');
+        ylabel(psy_labels{i});
+        title(sprintf('Correlation: %f / P-value: %f',c,pv1))
+    end
+    [c,pv2]=corr(grotV(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)));
+    psy_vars(i,:)=[c,pv2];
+    if pv2 < 0.05
+        figure;plot(grotV(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)),'ro');
+        xlabel('Psycological score');
+        ylabel(psy_labels{i});
+        title(sprintf('Correlation: %f / P-value: %f',c,pv2))
+    end
+    if pv1 < 0.05 && pv2 < 0.05
+        figure;scatter3(grotU(psy_scores(:,i)~=0,1),grotV(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)),'ro');
+    end
+end
+
+% Plot projections 33 controls / 33 depressed
+% -------------------------------------------------------------------------
+if exist('idx','var')
+    if ~isempty(idx)
+        clear c
+        c(1:33)=1;
+        c(34:66)=0;
+        figure;scatter(Uproj(:,1),Vproj(:,1),50,c(:),'filled','o');
+        hold on;
+        scatter(grotU(:,1),grotV(:,1),'filled','ro');
+        hold off
+        xlabel('Brain Score')
+        ylabel('Psy-Cog score')
+    end
+end
+    
+    
     
