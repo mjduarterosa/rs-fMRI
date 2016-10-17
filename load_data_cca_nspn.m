@@ -5,6 +5,7 @@
 % vars = csvread('/Users/maria/Documents/NSPN/docs/NSPN_vars_baseline_110816v5.csv');
 load('/Users/maria/Documents/NSPN/docs/NSPNvarsbaseline110816v5.mat')
 vars = NSPNvarsbaseline110816v5;
+nh = size(vars,1);
 
 % Connectivity (netmats - full correlation, NET)
 load('/Users/maria/Documents/NSPN/analysis/cca_analysis/netmats_NET_corr.mat');
@@ -48,6 +49,7 @@ psy_scores(isnan(psy_scores)) = med(isnan(psy_scores));
 % varsdep = csvread('/Users/maria/Documents/NSPN/docs/NSPN_vars_depressed.csv');
 load('/Users/maria/Documents/NSPN/docs/NSPNvarsdepressed.mat')
 varsdep = NSPNvarsdepressed;
+nd = size(varsdep,1);
 
 % load depressed Ids
 ids_d = csvread('/Users/maria/Documents/NSPN/docs/NSPN_IDs_depressed.csv'); 
@@ -78,6 +80,14 @@ genderdep = genderdep(:,2:end);
 
 % Psychiatric scores
 psy_scores_dep = csvread('/Users/maria/Documents/NSPN/docs/NSPN_psy_depressed.csv');   
+
+% Extra data (SCID)
+% -------------------------------------------------------------------------
+% scid = csvread('/Users/maria/Documents/NSPN/docs/NSPN_SCID_baseline_healthy.csv');     % weight and height
+% scid = scid(:,2:end);
+% 
+% scid_dep = csvread('/Users/maria/Documents/NSPN/docs/NSPN_SCID_baseline_depressed.csv');     % weight and height
+% scid_dep = scid_dep(:,2:end);
 
 % Concatenate data (comment for healthy only)
 % -------------------------------------------------------------------------

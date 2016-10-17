@@ -93,6 +93,16 @@ for row in csv_f:
     data_iua.append(row)
     data_iua_ids.append(row[0])
 
+# Read SCID
+f = open('/Users/maria/Documents/NSPN/docs/NSPN_SCID_depressed.csv', 'rU')
+csv_f = csv.reader(f)
+header = next(csv_f)
+data_scid = []
+data_scid_ids = []
+for row in csv_f:
+    data_scid.append(row)
+    data_scid_ids.append(row[0])
+
 # Get weight and height
 f = open('/Users/maria/Documents/NSPN/docs/NSPN_weight_height_waist_processed.csv', 'rU')
 csv_f = csv.reader(f)
@@ -106,12 +116,16 @@ for row in csv_f:
 # Read depressed subjects
 data_depressed = []
 data_wh_depressed = []
+scid_data = []
 for row in nspn_ids_depressed:
     indx_hpq = data_hpq_ids.index(row)
     indx_iua = data_iua_ids.index(row)
     indx_wh = data_wh_ids.index(row)
+    indx_scid = data_scid_ids.index(row)
     tmp = data_hpq[indx_hpq] + data_iua[indx_iua][1::]
     tmp_wh = data_wh[indx_wh]
+    tmp_scid = data_scid[indx_scid]
+    scid_data.append(tmp_scid)
     data_depressed.append(tmp)
     data_wh_depressed.append(tmp_wh)
 
@@ -133,13 +147,21 @@ for row in nspn_ids_depressed:
 #             cohort_good.append(ids_cohort[i])
 #             age_good.append(ids_age[i])
 
-# Save weight and height data - depressed cohort
-with open("/Users/maria/Documents/NSPN/docs/NSPN_weight_height_waist_depressed.csv", "wb") as nf:
+# Save variables data - depressed cohort
+with open("/Users/maria/Documents/NSPN/docs/NSPN_SCID_baseline_depressed.csv", "wb") as nf:
     writer = csv.writer(nf)
     for i in range(0,np.shape(ids_mri)[0]):
         if (nspn_ids_depressed.count(ids_mri[i])) > 0:
             indx = nspn_ids_depressed.index(ids_mri[i])
-            writer.writerow(data_wh_depressed[indx])
+            writer.writerow(scid_data[indx])
+
+# Save weight and height data - depressed cohort
+# with open("/Users/maria/Documents/NSPN/docs/NSPN_weight_height_waist_depressed.csv", "wb") as nf:
+#     writer = csv.writer(nf)
+#     for i in range(0,np.shape(ids_mri)[0]):
+#         if (nspn_ids_depressed.count(ids_mri[i])) > 0:
+#             indx = nspn_ids_depressed.index(ids_mri[i])
+#             writer.writerow(data_wh_depressed[indx])
 
 # # Save IDs - depressed cohort
 # with open("/Users/maria/Documents/NSPN/docs/NSPN_MRIids_depressed.csv", "wb") as nf:

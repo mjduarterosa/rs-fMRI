@@ -92,6 +92,16 @@ for row in csv_f:
     data_iua.append(row)
     data_iua_ids.append(row[0])
 
+# Read SCID
+f = open('/Users/maria/Documents/NSPN/docs/NSPN_SCID.csv', 'rU')
+csv_f = csv.reader(f)
+header = next(csv_f)
+data_scid = []
+data_scid_ids = []
+for row in csv_f:
+    data_scid.append(row)
+    data_scid_ids.append(row[0])
+
 # Get weight and height
 f = open('/Users/maria/Documents/NSPN/docs/NSPN_weight_height_waist_processed.csv', 'rU')
 csv_f = csv.reader(f)
@@ -111,14 +121,20 @@ baseline_vars = []
 data_wh_baseline = []
 baseline_wh = []
 age_cambridge = []
+scid_ids = []
+scid_data = []
 for row in csv_f:
     indx_hpq = data_hpq_ids.index(row[0])
     indx_iua = data_iua_ids.index(row[0])
+    indx_scid = data_scid_ids.index(row[0])
     indx_wh = data_wh_ids.index(row[0])
     tmp = data_hpq[indx_hpq] + data_iua[indx_iua][1::]
     tmp_wh = data_wh[indx_wh]
+    tmp_scid = data_scid[indx_scid]
     baseline_vars.append(tmp[0])
     data_baseline.append(tmp)
+    scid_ids.append(tmp_scid[0])
+    scid_data.append(tmp_scid)
     baseline_wh.append(tmp_wh[0])
     data_wh_baseline.append(tmp_wh)
     age_cambridge.append(row[4])
@@ -141,6 +157,13 @@ for row in csv_f:
 #             cohort_good.append(ids_cohort[i])
 #             age_good.append(ids_age[i])
 
+with open("/Users/maria/Documents/NSPN/docs/NSPN_SCID_baseline_healthy.csv", "wb") as nf:
+    writer = csv.writer(nf)
+    for i in range(0,np.shape(ids_mri)[0]):
+        if (scid_ids.count(ids_mri[i])) > 0:
+            indx = scid_ids.index(ids_mri[i])
+            writer.writerow(scid_data[indx])
+
 # Save age Cambridge
 # with open("/Users/maria/Documents/NSPN/docs/NSPN_age_baseline_cambridge.csv", "wb") as nf:
 #     writer = csv.writer(nf)
@@ -151,12 +174,12 @@ for row in csv_f:
 
 
 # Save weight and height data - Cambridhe cohort
-with open("/Users/maria/Documents/NSPN/docs/NSPN_weight_height_waist_baseline.csv", "wb") as nf:
-    writer = csv.writer(nf)
-    for i in range(0,np.shape(ids_mri)[0]):
-        if (baseline_wh.count(ids_mri[i])) > 0:
-            indx = baseline_wh.index(ids_mri[i])
-            writer.writerow(data_wh_baseline[indx])
+# with open("/Users/maria/Documents/NSPN/docs/NSPN_weight_height_waist_baseline.csv", "wb") as nf:
+#     writer = csv.writer(nf)
+#     for i in range(0,np.shape(ids_mri)[0]):
+#         if (baseline_wh.count(ids_mri[i])) > 0:
+#             indx = baseline_wh.index(ids_mri[i])
+#             writer.writerow(data_wh_baseline[indx])
 
 # # Save IDs - Cambridhe cohort
 # with open("/Users/maria/Documents/NSPN/docs/NSPN_MRIids_baseline.csv", "wb") as nf:
@@ -173,7 +196,7 @@ with open("/Users/maria/Documents/NSPN/docs/NSPN_weight_height_waist_baseline.cs
 #         else:
 #             writer.writerow([i,1])
 #
-# # Save gender information - Cambridhe cohort
+# # Save cohort information - Cambridhe cohort
 # with open("/Users/maria/Documents/NSPN/docs/NSPN_cohort_baseline.csv", "wb") as nf:
 #     writer = csv.writer(nf)
 #     for i in range(0,np.shape(ids_good)[0]):

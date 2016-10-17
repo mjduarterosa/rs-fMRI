@@ -14,9 +14,6 @@ load '/Users/maria/Documents/NSPN/docs/vars_label.mat'
 
 % Plot most important variables (n = 20)
 % -------------------------------------------------------------------------
-ncomp = 20;
-[s,si] = sort(grotBB);
-[sa,sia] = sort(abs(grotBB));
 
 % Make bar plot
 scales = {'apsd','bis','cads','dasi','icu','k10','spq','wemwbs','ypq','ctq','wasi'};
@@ -28,6 +25,10 @@ for i = 1:length(varslabelsbaseline)
         end
     end
 end
+
+ncomp = 20;
+[s,si] = sort(grotBB);
+[sa,sia] = sort(abs(grotBB));
 data = [s(1:ncomp),s(end-ncomp+1:end)];
 data_low = [sa(1:2*ncomp)];
 datalab_low = [sia(1:2*ncomp)];
@@ -43,6 +44,22 @@ grp_low = colorlabels(datalab_low);
 for i = 1:length(scales), grp_labels{i,1} = scales{i}; grp_labels{i,2} = i; end
 plot_w_joao(data, labelsw, grp, grp_labels);
 plot_w_joao(data_low, labelsw_low, grp_low, grp_labels);
+
+% Plot variables with pvals < 0.05 (controls vs depressed)
+% -------------------------------------------------------------------------
+if strcmp(cohort,'all')
+    tmp2 = zeros(length(difgrotBBperm(:,1)),1);
+    tmp2(idxBBp) = difgrotBBperm(idxBBp);
+    data = tmp2(tmp2~=0);
+    datalab = find(tmp2~=0);
+    labelsw = cell(1,length(datalab));
+    for i = 1:length(datalab)
+        labelsw{i} = char(varslabelsbaseline{datalab(i)});
+    end
+    grp = colorlabels(datalab);
+    for i = 1:length(scales), grp_labels{i,1} = scales{i}; grp_labels{i,2} = i; end
+    plot_w_joao(data, labelsw, grp, grp_labels);
+end
 
 % Plot projections CCA1 with color corresponding to variable
 % -------------------------------------------------------------------------
@@ -82,21 +99,18 @@ for i = 1:size(psy_scores,2)
     [c,pv1]=corr(grotU(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)));
     psy_brain(i,:)=[c,pv1];
     if pv1 < 0.05
-        figure;plot(grotU(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)),'ro');
-        xlabel('Brain score');
-        ylabel(psy_labels{i});
-        title(sprintf('Correlation: %f / P-value: %f',c,pv1))
+        figure;plotregression(grotU(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)));
+        xlabel('Brain Score','FontSize', 20);
+        ylabel(psy_labels{i},'FontSize', 20);
+        title(sprintf('Correlation: %f / P-value: %f',c,pv1),'FontSize', 20);
     end
     [c,pv2]=corr(grotV(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)));
     psy_vars(i,:)=[c,pv2];
     if pv2 < 0.05
-        figure;plot(grotV(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)),'ro');
-        xlabel('Psycological score');
-        ylabel(psy_labels{i});
-        title(sprintf('Correlation: %f / P-value: %f',c,pv2))
-    end
-    if pv1 < 0.05 && pv2 < 0.05
-        figure;scatter3(grotU(psy_scores(:,i)~=0,1),grotV(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)),'ro');
+        figure;plotregression(grotV(psy_scores(:,i)~=0,1),palm_inormal(psy_scores(psy_scores(:,i)~=0,i)));
+        xlabel('Psycological score','FontSize', 20);
+        ylabel(psy_labels{i},'FontSize', 20);
+        title(sprintf('Correlation: %f / P-value: %f',c,pv2),'FontSize', 20);
     end
 end
 

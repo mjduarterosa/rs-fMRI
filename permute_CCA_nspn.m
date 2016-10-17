@@ -16,8 +16,8 @@ clc
 
 % Options
 % -------------------------------------------------------------------------
-cohort = 'healthy';
-% cohort = 'all';
+% cohort = 'healthy';
+cohort = 'all';
 inc_age_gender = 0; % include age and gender as confound?
 
 % Load data
@@ -55,10 +55,15 @@ end
 if strcmp(cohort,'healthy')
     nn = 269;
 else
-    nn = 312;
+    %     nn = 312;
+    nn = 300;
 end
+
 vars(vars==999) = NaN;
+figure;subplot(1,3,1);plot(sum(isnan(vars(1:nh,:)))/nh,'o');ylim([0 1]);
+subplot(1,3,2);plot(sum(isnan(vars(nh+1:end,:)))/nd,'o');ylim([0 1]);
 vars(:,sum(~isnan(vars))<nn) = [];  % pre-delete vars with LOADS of missing data
+subplot(1,3,3);plot(sum(isnan(vars(:,:)))/(nh+nd),'o');ylim([0 1]);
 vars = vars(:,2:end);
 med = repmat(median(vars,'omitnan'),size(vars,1),1); % missing data imputation using the median
 vars(isnan(vars)) = med(isnan(vars));
@@ -76,7 +81,7 @@ NETd = nets_demean(grot-conf*(pinv(conf)*grot));    % deconfound and demean
 % -------------------------------------------------------------------------
 
 % prepare permutation scheme using PALM - for more details see:
-Nperm = 10000;                                                                       
+Nperm = 10000;      
 EB = ones(N,1);
 PAPset = palm_quickperms([ ], EB, Nperm);
 
@@ -117,7 +122,8 @@ varsdCOV2=nearestSPD(varsdCOV); % minor adjustment: project onto the nearest val
 
 % Get different PCA datasets
 % -------------------------------------------------------------------------
-pca_comp = [10, 25, 50, 75, 100, 125, 150, 200, 225, 250, 275, 300];
+% pca_comp = [10, 25, 50, 75, 100, 125, 150, 200];
+pca_comp = [50];
 for Nkeep = 1:length(pca_comp),
     
     disp(sprintf('PCA dataset %d / Number of components %d >>>>>', Nkeep, pca_comp(Nkeep)));
@@ -134,11 +140,37 @@ for Nkeep = 1:length(pca_comp),
     % -------------------------------------------------------------------------
     grotRp=zeros(Nperm,pca_comp(Nkeep)); clear grotRpval;
     for j=1:Nperm
+        fprintf('Permutation: %d out of %d \n',j,Nperm)
         [grotAr,grotBr,grotRp(j,:),grotUr,grotVr,grotstatsr]=canoncorr(uu1,uu2(PAPset(:,j),:));
+        
+        % Test differences between controls and depressed
+        % -------------------------------------------------------------------------
+        if strcmp(cohort,'all')
+            grotAAc = corr(grotUr(1:nh,1),NET(1:nh,:))';
+            grotAAd = corr(grotUr(nh+1:end,1),NET(nh+1:end,:))';
+            grotBBc = corr(grotVr(1:nh,1),palm_inormal(vars(1:nh,:)))';
+            grotBBd = corr(grotVr(nh+1:end,1),palm_inormal(vars(nh+1:end,:)))';
+            zAAc = 0.5.*log((1+grotAAc)./(1-grotAAc));
+            zAAd = 0.5.*log((1+grotAAd)./(1-grotAAd));
+            zBBc = 0.5.*log((1+grotBBc)./(1-grotBBc));
+            zBBd = 0.5.*log((1+grotBBd)./(1-grotBBd));
+            zAA = (zAAc - zAAd)./sqrt((1/(nh-3))+(1/(nd-3)));
+            zBB = (zBBc - zBBd)./sqrt((1/(nh-3))+(1/(nd-3)));
+            pvalsAA = normcdf(-abs(zAA),0,1);
+            pvalsBB = normcdf(-abs(zBB),0,1);
+            difgrotAA = zAA;
+            difgrotBB = zBB;
+            difgrotAAperm(:,j) = difgrotAA;
+            difgrotBBperm(:,j) = difgrotBB;
+            difgrotAApermmax(:,j) = max(abs(difgrotAA));
+            difgrotBBpermmax(:,j) = max(abs(difgrotBB));
+        end
+        
     end
+
     for i=1:pca_comp(Nkeep);  % get FWE-corrected pvalues
         grotRpval(i)=(1+sum(grotRp(2:end,1)>=grotR(i)))/Nperm;
-        %         grotRpval(i) = (grotR(1)-sum(grotRp(2:end,1))/Nperm)/std(grotRp(2:end,1));
+        grotRzscore(i) = (grotR(1)-sum(grotRp(2:end,1))/Nperm)/std(grotRp(2:end,1));
     end
     
     Ncca=sum(grotRpval<0.05);  % number of FWE-significant CCA components
@@ -146,6 +178,8 @@ for Nkeep = 1:length(pca_comp),
     disp(sprintf('Number of FWE-significant CCA components: %d / Canonical Correlation: %f / P-value: %f',Ncca,grotR(1),grotRpval(1)));
     
     perm_pvals(Nkeep) = grotRpval(1);
+    perm_zscores(Nkeep) = grotRzscore(1);
+    
     
 end
 
@@ -161,6 +195,8 @@ uu2=uu-conf*(pinv(conf)*uu);             % deconfound again just to be safe
 % Re-run CCA
 [grotA,grotB,grotR,grotU,grotV,grotstats]=canoncorr(uu1,uu2);
 
+% Correlations
+% -------------------------------------------------------------------------
 % netmat weights for CCA mode 1
 grotAA = corr(grotU(:,1),NET)';
 % or
@@ -168,13 +204,34 @@ grotAAd = corr(grotU(:,1),NETd(:,1:size(NET,2)))'; % weights after deconfounding
 
 % variable weights for CCA mode 1
 grotBB = corr(grotV(:,1),palm_inormal(vars),'rows','pairwise');
-% or 
+% or
 varsgrot=palm_inormal(vars);
 for i=1:size(varsgrot,2)
-  grot=(isnan(varsgrot(:,i))==0); grotconf=nets_demean(conf(grot,:)); varsgrot(grot,i)=nets_normalise(varsgrot(grot,i)-grotconf*(pinv(grotconf)*varsgrot(grot,i)));
+    grot=(isnan(varsgrot(:,i))==0); grotconf=nets_demean(conf(grot,:)); varsgrot(grot,i)=nets_normalise(varsgrot(grot,i)-grotconf*(pinv(grotconf)*varsgrot(grot,i)));
 end
 
 grotBBd = corr(grotV(:,1),varsgrot,'rows','pairwise')'; % weights after deconfounding
+
+idxAAp = 1:length(grotAA);
+idxBBp = 1:length(grotBB);
+idxAAp = idxAAp(((1+sum(difgrotAAperm(:,2:end)>=repmat(difgrotAAperm(:,1),1,size(difgrotAAperm,2)-1),2))/Nperm)<0.05);
+idxBBp = idxBBp(((1+sum(difgrotBBperm(:,2:end)>=repmat(difgrotBBperm(:,1),1,size(difgrotBBperm,2)-1),2))/Nperm)<0.05);
+
+% Get brain scores
+% -------------------------------------------------------------------------
+tmp = zeros(137,137);
+tmp2 = zeros(length(difgrotAAperm(:,1)),1);
+tmp2(idxAAp) = difgrotAAperm(idxAAp);
+tmp(tril(ones(137, 137),-1)==1)=tmp2;
+brain_score = tmp + tmp';
+% brain_score(abs(brain_score)<0.45)=0;
+csvwrite('Brain_diff_Healthy_Dep.csv',brain_score);
+
+% tmp = zeros(137,137);
+% tmp(tril(ones(137, 137),-1)==1)=grotBA;
+% brain_score = tmp + tmp';
+% brain_score(abs(brain_score)<0.45)=0;
+% csvwrite('Brain_score_cross_all_thres_045.csv',brain_score);
 
 % Plot results
 % -------------------------------------------------------------------------

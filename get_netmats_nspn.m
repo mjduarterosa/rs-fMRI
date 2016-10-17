@@ -26,13 +26,14 @@ for s = 1: nsub,
             t(:,j) = ROIcbu{s,i,j};
         end
         t = (t-repmat(mean(t),size(t,1),1))./repmat(std(t),size(t,1),1);
-        netmats = netmats + nets_netmats(t,0,'icov',10);
+        netmats = netmats + nets_netmats(t,0,'corr');
     end
     tmp = netmats/nTEs;
     netmats_cbu(s,:,:) = tmp;
     ri = tril(ones(size(tmp,1), size(tmp,1)),-1);
     r = tmp(ri==1)';
     NET = [NET; r]; 
+    keyboard
 end
 
 % Calculate netmats for WBIC
