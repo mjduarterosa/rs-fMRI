@@ -33,10 +33,19 @@ fd = mean(frame_disp_sub(ids,:),2);
 % MRI centre
 mri_centre = csvread('/Users/maria/Documents/NSPN/docs/NSPN_MRIcentre_baseline.csv');      
 mri_centre = mri_centre(:,2:end);
+mri_centre_conf = zeros(size(mri_centre,1),3);
+mri_centre_conf(mri_centre==1,1) = 1;
+mri_centre_conf(mri_centre==2,2) = 1;
+mri_centre_conf(mri_centre==3,3) = 1;
+mri_centre = mri_centre_conf;
 
 % Gender
 gender = csvread('/Users/maria/Documents/NSPN/docs/NSPN_gender_bin_baseline.csv');      
 gender = gender(:,2:end);
+
+% Gender
+ehi = csvread('/Users/maria/Documents/NSPN/docs/NSPN_EHI_baseline.csv');      
+ehi = ehi(:,2:end);
 
 % Psychiatric scores
 psy_scores = csvread('/Users/maria/Documents/NSPN/docs/NSPN_psy_baseline.csv');   
@@ -71,8 +80,13 @@ agedep = agedep(:,2:end);
 fddep = mean(frame_disp_sub(ids_d,:),2); 
 
 % MRI centre
-mri_centred_dep = csvread('/Users/maria/Documents/NSPN/docs/NSPN_MRIcentre_depressed.csv');      % MRI centre
-mri_centred_dep = mri_centred_dep(:,2:end);
+mri_centre_dep = csvread('/Users/maria/Documents/NSPN/docs/NSPN_MRIcentre_depressed.csv');      % MRI centre
+mri_centre_dep = mri_centre_dep(:,2:end);
+mri_centre_conf_dep = zeros(size(mri_centre_dep,1),3);
+mri_centre_conf_dep(mri_centre_dep==1,1) = 1;
+mri_centre_conf_dep(mri_centre_dep==2,2) = 1;
+mri_centre_conf_dep(mri_centre_dep==3,3) = 1;
+mri_centre_dep = mri_centre_conf_dep;
 
 % Gender
 genderdep = csvread('/Users/maria/Documents/NSPN/docs/NSPN_gender_bin_depressed.csv');      % gender
@@ -91,7 +105,6 @@ psy_scores_dep = csvread('/Users/maria/Documents/NSPN/docs/NSPN_psy_depressed.cs
 
 % Concatenate data (comment for healthy only)
 % -------------------------------------------------------------------------
-
 switch cohort
     case 'healthy'
         disp('Healthy cohort!');
@@ -105,7 +118,7 @@ switch cohort
         
         % Concatenate confounds
         varsQconf = [varsQconf; varsQconfdep];
-        mri_centre = [mri_centre; mri_centred_dep];
+        mri_centre = [mri_centre; mri_centre_dep];
         fd = [fd; fddep];
         age = [age; agedep];
         gender = [gender; genderdep];

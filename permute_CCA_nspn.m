@@ -37,6 +37,7 @@ varsQconftmp = varsQconf;
 
 % Setup confounds matrix
 varsQconftmp(varsQconftmp==999)=0;  % impute missing data as zeros
+
 conf = palm_inormal(varsQconftmp);  % Gaussianise
 conf(isnan(conf))=0;                % impute missing data as zeros
 conf = nets_normalise(conf);        % normalise
@@ -47,6 +48,9 @@ if inc_age_gender
 else
     conf = [conf mri_centre];
 end
+
+% SOLVE PROBLEM WITH SITE REGRESSION!!!!!!
+% conf = nets_normalise(conf);
 
 % Process cognitive/clinical variables
 % -------------------------------------------------------------------------
@@ -63,7 +67,11 @@ vars(vars==999) = NaN;
 figure;subplot(1,3,1);plot(sum(isnan(vars(1:nh,:)))/nh,'o');ylim([0 1]);
 subplot(1,3,2);plot(sum(isnan(vars(nh+1:end,:)))/nd,'o');ylim([0 1]);
 vars(:,sum(~isnan(vars))<nn) = [];  % pre-delete vars with LOADS of missing data
-subplot(1,3,3);plot(sum(isnan(vars(:,:)))/(nh+nd),'o');ylim([0 1]);
+if strcmp(cohort,'all')
+    subplot(1,3,3);plot(sum(isnan(vars(:,:)))/(nh+nd),'o');ylim([0 1]);
+else
+    subplot(1,3,3);plot(sum(isnan(vars(:,:)))/(nh),'o');ylim([0 1]);
+end
 vars = vars(:,2:end);
 med = repmat(median(vars,'omitnan'),size(vars,1),1); % missing data imputation using the median
 vars(isnan(vars)) = med(isnan(vars));
@@ -101,6 +109,9 @@ for i=1:size(vars,2)
   end
 end
 
+% load all_badvars
+% badvars = all_badvars;
+
 % get list of which SMs to feed into CCA
 varskeep=setdiff([1:size(vars,2)],badvars);                                                                
 
@@ -123,7 +134,7 @@ varsdCOV2=nearestSPD(varsdCOV); % minor adjustment: project onto the nearest val
 % Get different PCA datasets
 % -------------------------------------------------------------------------
 % pca_comp = [10, 25, 50, 75, 100, 125, 150, 200];
-pca_comp = [50];
+pca_comp = [10];
 for Nkeep = 1:length(pca_comp),
     
     disp(sprintf('PCA dataset %d / Number of components %d >>>>>', Nkeep, pca_comp(Nkeep)));
@@ -146,10 +157,10 @@ for Nkeep = 1:length(pca_comp),
         % Test differences between controls and depressed
         % -------------------------------------------------------------------------
         if strcmp(cohort,'all')
-            grotAAc = corr(grotUr(1:nh,1),NET(1:nh,:))';
-            grotAAd = corr(grotUr(nh+1:end,1),NET(nh+1:end,:))';
-            grotBBc = corr(grotVr(1:nh,1),palm_inormal(vars(1:nh,:)))';
-            grotBBd = corr(grotVr(nh+1:end,1),palm_inormal(vars(nh+1:end,:)))';
+            grotAAc = (corr(grotUr(1:nh,1),NET(1:nh,:))').^2;
+            grotAAd = (corr(grotUr(nh+1:end,1),NET(nh+1:end,:))').^2;
+            grotBBc = (corr(grotVr(1:nh,1),palm_inormal(vars(1:nh,:)))').^2;
+            grotBBd = (corr(grotVr(nh+1:end,1),palm_inormal(vars(nh+1:end,:)))').^2;
             zAAc = 0.5.*log((1+grotAAc)./(1-grotAAc));
             zAAd = 0.5.*log((1+grotAAd)./(1-grotAAd));
             zBBc = 0.5.*log((1+grotBBc)./(1-grotBBc));
@@ -158,19 +169,27 @@ for Nkeep = 1:length(pca_comp),
             zBB = (zBBc - zBBd)./sqrt((1/(nh-3))+(1/(nd-3)));
             pvalsAA = normcdf(-abs(zAA),0,1);
             pvalsBB = normcdf(-abs(zBB),0,1);
-            difgrotAA = zAA;
-            difgrotBB = zBB;
-            difgrotAAperm(:,j) = difgrotAA;
-            difgrotBBperm(:,j) = difgrotBB;
-            difgrotAApermmax(:,j) = max(abs(difgrotAA));
-            difgrotBBpermmax(:,j) = max(abs(difgrotBB));
+            difgrotAA = grotAAc - grotAAd;
+            difgrotBB = grotBBc - grotBBd;
+            if j ==1
+                difgrotAAperm(:,j) = difgrotAA;
+                difgrotBBperm(:,j) = difgrotBB;
+            end
+            difgrotAApermmax(:,j) = max(difgrotAA);
+            difgrotBBpermmax(:,j) = max(difgrotBB);
         end
         
     end
-
+    
+    if strcmp(cohort,'all')
+        p_adjAA = palm_datapval(difgrotAAperm', difgrotAApermmax, false);
+        p_adjBB = palm_datapval(difgrotBBperm', difgrotBBpermmax, false);
+    end
+    
+    clear grotRpval
     for i=1:pca_comp(Nkeep);  % get FWE-corrected pvalues
         grotRpval(i)=(1+sum(grotRp(2:end,1)>=grotR(i)))/Nperm;
-        grotRzscore(i) = (grotR(1)-sum(grotRp(2:end,1))/Nperm)/std(grotRp(2:end,1));
+%         grotRzscore(i) = (grotR(1)-sum(grotRp(2:end,1))/Nperm)/std(grotRp(2:end,1));
     end
     
     Ncca=sum(grotRpval<0.05);  % number of FWE-significant CCA components
@@ -178,7 +197,7 @@ for Nkeep = 1:length(pca_comp),
     disp(sprintf('Number of FWE-significant CCA components: %d / Canonical Correlation: %f / P-value: %f',Ncca,grotR(1),grotRpval(1)));
     
     perm_pvals(Nkeep) = grotRpval(1);
-    perm_zscores(Nkeep) = grotRzscore(1);
+%     perm_zscores(Nkeep) = grotRzscore(1);
     
     
 end
@@ -209,26 +228,27 @@ varsgrot=palm_inormal(vars);
 for i=1:size(varsgrot,2)
     grot=(isnan(varsgrot(:,i))==0); grotconf=nets_demean(conf(grot,:)); varsgrot(grot,i)=nets_normalise(varsgrot(grot,i)-grotconf*(pinv(grotconf)*varsgrot(grot,i)));
 end
-
 grotBBd = corr(grotV(:,1),varsgrot,'rows','pairwise')'; % weights after deconfounding
 
-idxAAp = 1:length(grotAA);
-idxBBp = 1:length(grotBB);
-idxAAp = idxAAp(((1+sum(difgrotAAperm(:,2:end)>=repmat(difgrotAAperm(:,1),1,size(difgrotAAperm,2)-1),2))/Nperm)<0.05);
-idxBBp = idxBBp(((1+sum(difgrotBBperm(:,2:end)>=repmat(difgrotBBperm(:,1),1,size(difgrotBBperm,2)-1),2))/Nperm)<0.05);
+if strcmp(cohort,'all')
+    idxAAp = 1:length(grotAA);
+    idxBBp = 1:length(grotBB);
+    idxAAp = idxAAp(((1+sum(difgrotAAperm(:,2:end)>=repmat(difgrotAAperm(:,1),1,size(difgrotAAperm,2)-1),2))/Nperm)<0.05);
+    idxBBp = idxBBp(((1+sum(difgrotBBperm(:,2:end)>=repmat(difgrotBBperm(:,1),1,size(difgrotBBperm,2)-1),2))/Nperm)<0.05);
+end
 
 % Get brain scores
 % -------------------------------------------------------------------------
-tmp = zeros(137,137);
-tmp2 = zeros(length(difgrotAAperm(:,1)),1);
-tmp2(idxAAp) = difgrotAAperm(idxAAp);
-tmp(tril(ones(137, 137),-1)==1)=tmp2;
-brain_score = tmp + tmp';
+% tmp = zeros(137,137);
+% tmp2 = zeros(length(difgrotAAperm(:,1)),1);
+% tmp2(idxAAp) = difgrotAAperm(idxAAp);
+% tmp(tril(ones(137, 137),-1)==1)=tmp2;
+% brain_score = tmp + tmp';
 % brain_score(abs(brain_score)<0.45)=0;
-csvwrite('Brain_diff_Healthy_Dep.csv',brain_score);
+% csvwrite('Brain_diff_Healthy_Dep.csv',brain_score);
 
 % tmp = zeros(137,137);
-% tmp(tril(ones(137, 137),-1)==1)=grotBA;
+% tmp(tril(ones(137, 137),-1)==1)=grotAA;
 % brain_score = tmp + tmp';
 % brain_score(abs(brain_score)<0.45)=0;
 % csvwrite('Brain_score_cross_all_thres_045.csv',brain_score);

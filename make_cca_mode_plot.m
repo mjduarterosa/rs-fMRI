@@ -48,17 +48,19 @@ plot_w_joao(data_low, labelsw_low, grp_low, grp_labels);
 % Plot variables with pvals < 0.05 (controls vs depressed)
 % -------------------------------------------------------------------------
 if strcmp(cohort,'all')
-    tmp2 = zeros(length(difgrotBBperm(:,1)),1);
-    tmp2(idxBBp) = difgrotBBperm(idxBBp);
-    data = tmp2(tmp2~=0);
-    datalab = find(tmp2~=0);
-    labelsw = cell(1,length(datalab));
-    for i = 1:length(datalab)
-        labelsw{i} = char(varslabelsbaseline{datalab(i)});
+    if exist('difgrotBBperm')
+        tmp2 = zeros(length(difgrotBBperm(:)),1);
+        tmp2(p_adjBB<0.05) = difgrotBBperm(p_adjBB<0.05);
+        data = tmp2(tmp2~=0);
+        datalab = find(tmp2~=0);
+        labelsw = cell(1,length(datalab));
+        for i = 1:length(datalab)
+            labelsw{i} = char(varslabelsbaseline{datalab(i)});
+        end
+        grp = colorlabels(datalab);
+        for i = 1:length(scales), grp_labels{i,1} = scales{i}; grp_labels{i,2} = i; end
+        plot_w_joao(data, labelsw, grp, grp_labels);
     end
-    grp = colorlabels(datalab);
-    for i = 1:length(scales), grp_labels{i,1} = scales{i}; grp_labels{i,2} = i; end
-    plot_w_joao(data, labelsw, grp, grp_labels);
 end
 
 % Plot projections CCA1 with color corresponding to variable
@@ -74,13 +76,24 @@ c((c>=22 & c<26))=5;
 figure;scatter(grotU(:,1),grotV(:,1),100,c(:)','filled','o');
 xlabel('Brain Score')
 ylabel('Psy-Cog score')
+title('Age')
 colorbar;
+clear c
+if strcmp(cohort,'healthy')
+    c(:) = ehi(:,2)>0;
+    figure;scatter(grotU(:,1),grotV(:,1),100,c(:)','filled','o');
+    xlabel('Brain Score')
+    ylabel('Psy-Cog score')
+    title('EHI')
+    colorbar;
+end
 clear c
 c(:)=gender;
 if exist('idx','var'), if ~isempty(idx),c(idx)=[]; end; end
 figure;scatter(grotU(:,1),grotV(:,1),100,c(:),'filled','o');
 xlabel('Brain Score')
 ylabel('Psy-Cog score')
+title('Gender')
 colorbar
 if length(c)>300,
     c(1:299)=1;
@@ -88,8 +101,15 @@ if length(c)>300,
 figure;scatter(grotU(:,1),grotV(:,1),100,c(:),'filled','o');
 xlabel('Brain Score')
 ylabel('Psy-Cog score')
+title('Depression')
 end
 colorbar
+
+if strcmp(cohort,'healthy')
+    figure;plotregression(grotU(:,1),palm_inormal(ehi(:,end)));
+    xlabel('Brain score','FontSize', 20);
+    ylabel('EHI - writing','FontSize', 20);
+end
 
 % Plot psychiatric scores
 % -------------------------------------------------------------------------
